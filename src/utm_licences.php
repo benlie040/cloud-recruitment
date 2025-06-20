@@ -7,11 +7,9 @@
 
 # exception handling, to prevent a fatal error, when reading the file
 try {
-  # path of the file
-  $fileUrl = 'new 1.tt';
-  //$fileUrl = 'updatev12-access-pseudonymized.log';
+  $fileUrl = './../../updatev12-access-pseudonymized.log'; //path of the file outside of the project folder
 
-  # opening the file in ready only mode
+  # opening the logfile in ready only mode
   $logFile = fopen($fileUrl, "r");
 
   if (!$logFile) {
@@ -19,37 +17,37 @@ try {
     throw new Exception("Fehler: Datei kann nicht geöffnet werden!");
   }
 } catch (Exception $e) {
-  # termination of the script
-  die($e->getMessage());
+  die($e->getMessage()); // termination of the script
 }
+# array for storing the key/value pairs of serial number & number of accesses
+$arraySN = [];
 
-$array = [];
-
-# reading the input stream until the end of file
 while (!feof($logFile)) {
   $line = fgets($logFile);
 
   # creating an array of each string of the current line, with whitespace as the delimiter
   $values = explode(" ", string: $line);
 
-  # unset variable for the serial number
+  # unset variable for the serial number at the start of each loop
   $serialNumber = null;
 
-  # checking if the line contains a serial number value, then adding it to an array
   foreach ($values as $value) {
-    # 
+    # if the current line contains a serial number, the value will be assigned to a temp. variable
     if (str_starts_with($value, "serial="))
       $serialNumber = substr($value, 7);
   }
-  # 
+  # if serialNumber is set, a serial number was found
   if (isset($serialNumber))
-    array_key_exists($serialNumber, $array) ?
-      $array[$serialNumber] += 1
+    array_key_exists($serialNumber, $arraySN) ?
+      /* if the serial number was already added to the associative array, 
+      only the number of accesses will be counted up by 1*/
+      $arraySN[$serialNumber] += 1
       :
-      $array[$serialNumber] = 1;
+      $arraySN[$serialNumber] = 1; //new serial number will be added with the first access
 }
 
 fclose($logFile);
+
 /* output of all identified serial numbers (key) and the number 
-of times (value) the tied UTM tried to access the server */
-print_r($array);
+of accesses (value) */
+print_r($arraySN);
