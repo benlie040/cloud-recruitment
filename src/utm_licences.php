@@ -48,6 +48,17 @@ while (!feof($logFile)) {
 
 fclose($logFile);
 
-/* output of all identified serial numbers (key) and the number 
-of accesses (value) */
-print_r($arraySN);
+# sorting (descending) the array according to the values
+arsort($arraySN);
+
+# slicing the array to obtain only the first 10 elements
+$arrayTop10 = (array_slice($arraySN, 0, 10));
+
+$file = fopen("./../../result_utm_licences.txt", "w");
+
+# writing the result into a text file
+foreach ($arrayTop10 as $serNr => $accessNr) {
+  fwrite($file, "Seriennummer: $serNr, Zugriffe: $accessNr \n");
+}
+
+fclose($file);
