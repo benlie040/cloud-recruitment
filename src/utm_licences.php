@@ -5,12 +5,14 @@
  *  accessing the server most often. 
  */
 
+include 'includes/extract.inc.php';
+
 # exception handling, to prevent a fatal error, when reading the file
 try {
-  $fileUrl = './../../updatev12-access-pseudonymized.log'; //path of the file outside of the project folder
+  $filePath = '../log/updatev12-access-pseudonymized.log'; //path of the logfile
 
   # opening the logfile in ready only mode
-  $logFile = fopen($fileUrl, "r");
+  $logFile = fopen($filePath, "r");
 
   if (!$logFile) {
     # exception is thrown, if fopen fails
@@ -31,11 +33,9 @@ while (!feof($logFile)) {
   # unset variable for the serial number at the start of each loop
   $serialNumber = null;
 
-  foreach ($values as $value) {
-    # if the current line contains a serial number, the value will be assigned to a temp. variable
-    if (str_starts_with($value, "serial="))
-      $serialNumber = substr($value, 7);
-  }
+  # function call of stringExtract() included in extract.inc.php
+  $serialNumber = stringExtract($line, "serial=");
+
   # if serialNumber is set, a serial number was found
   if (isset($serialNumber))
     array_key_exists($serialNumber, $arraySN) ?
@@ -54,11 +54,12 @@ arsort($arraySN);
 # slicing the array to obtain only the first 10 elements
 $arrayTop10 = (array_slice($arraySN, 0, 10));
 
-$file = fopen("./../../result_utm_licences.txt", "w");
+$file = fopen("../data/result_utm_licences.txt", "w");
 
 # writing the result into a text file
 foreach ($arrayTop10 as $serNr => $accessNr) {
   fwrite($file, "Seriennummer: $serNr, Zugriffe: $accessNr \n");
 }
 
+echo "result_utm_licences.txt wurde erstellt in ../txt/";
 fclose($file);
