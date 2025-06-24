@@ -16,4 +16,10 @@ a few statistics and determine issues related to the UTM licences of the client 
 
 - go into the src folder with `cd src`
 - run the script with the command `php utm_licences.php`
-- the result will be stored in `/txt`
+- the result will be stored in `data/result_utm_licences.php.txt`
+
+**Task #2**
+
+- go into the src folder with `cd src`
+- run the script with the command `php utm_licence_violation.php`
+- the result will be stored in `data/result_utm_licence_violation.txt`
