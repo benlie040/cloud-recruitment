@@ -22,8 +22,8 @@ function specsExtract(string $specsString, string $fieldName): string|false
     # Decoding of the String from Base64 format
     $decodedData = base64_decode($specsString);
     if ($decodedData) {
-        # Uncompressing the Base64 decoded data
-        $unzippedData = gzdecode($decodedData);
+        # Uncompressing the Base64 decoded data, suppressing warnings if decodedData is corrupted
+        $unzippedData = @gzdecode($decodedData);
         if ($unzippedData) {
             # Conversion of the uncompressed JSON string into an associative array
             $metadataArray = json_decode($unzippedData, true);

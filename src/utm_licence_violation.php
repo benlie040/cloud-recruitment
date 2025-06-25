@@ -87,4 +87,5 @@ foreach ($utmArray as $serNr => $macAddr) {
     fwrite($file, "Seriennummer: $serNr, 
     Anzahl registrierter Mac Adressen:" . sizeof($macAddr) . " \n");
 }
+echo "result_utm_licence_violation.txt wurde erstellt in ../data/";
 fclose($file);
