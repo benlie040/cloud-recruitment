@@ -23,3 +23,10 @@ a few statistics and determine issues related to the UTM licences of the client 
 - go into the src folder with `cd src`
 - run the script with the command `php utm_licence_violation.php`
 - the result will be stored in `data/result_utm_licence_violation.txt`
+
+**Task #3**
+
+- go into the src folder with `cd src`
+- run the script with the command `php utm_hardware.php`
+- the result for category machine will be stored in `data/result_utm_hardware_machine.txt`
+- the result for category cpu will be stored in `data/result_utm_hardware_cpu.txt`
