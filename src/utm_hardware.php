@@ -46,7 +46,7 @@ while (!feof($logFile)) {
             $machine = specsExtract($specsString, "machine");
             $cpu = specsExtract($specsString, "cpu");
 
-            # Storing the machine/cpu values for every serial number in associative arrays
+            # Storing the serial numbers and their machine/cpu values in associative arrays
             $arrMachine[$serialNumber] = $machine;
             $arrCpu[$serialNumber] = $cpu;
         }
@@ -54,4 +54,31 @@ while (!feof($logFile)) {
 }
 fclose($logFile);
 
-print_r($arrMachine);
+# Opening two textfiles to store the values of machine and cpu separately
+$fileMachine = fopen("../data/result_utm_hardware_machine.txt", "w");
+$fileCpu = fopen("../data/result_utm_hardware_cpu.txt", "w");
+
+# Counting the identicaly values for machine respectively cpu 
+$arrCountMachine = array_count_values($arrMachine);
+$arrCountCpu = array_count_values($arrCpu);
+
+/* sorting (descending) the arrays according to the values, in 
+this case the value (string) of machine respectively cpu */
+arsort($arrCountMachine);
+arsort($arrCountCpu);
+
+#  Writing the results für serial number and machine value into the textfile
+foreach ($arrCountMachine as $machineKey => $licenceCount) {
+    fwrite($fileMachine, "Architektur: $machineKey,  Anzahl Lizenzen: $licenceCount \n");
+}
+
+#  Writing the results für serial number and cpu value into the textfile
+foreach ($arrCountCpu as $machineKey => $licenceCount) {
+    fwrite($fileCpu, "Architektur: $machineKey,  Anzahl Lizenzen: $licenceCount \n");
+}
+
+echo "result_utm_hardware.txt wurde erstellt in ../data/ \n";
+echo "result_utm_hardware.txt wurde erstellt in ../data/";
+
+fclose($fileMachine);
+fclose($fileCpu);
