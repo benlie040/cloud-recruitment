@@ -23,10 +23,6 @@ try {
     die($e->getMessage()); // Termination of the script
 }
 
-# The array will store serial numbers as keys and arrays containing their mac addresses as values
-$arrMachine = [];
-$arrCpu = [];
-
 while (!feof($logFile)) {
     $line = fgets($logFile);
 
@@ -42,43 +38,105 @@ while (!feof($logFile)) {
         # The script will only proceed, when a specs string was found
         if (isset($specsString)) {
 
-            # Function call of specsExtract() included in extract.inc.php to obtain the machnine and cpu values
+            # Function call of specsExtract() included in extract.inc.php to obtain the hardware values
             $machine = specsExtract($specsString, "machine");
             $cpu = specsExtract($specsString, "cpu");
+            $mem = specsExtract($specsString, "mem");
+            $diskRoot = specsExtract($specsString, "disk_root");
+            $diskData = specsExtract($specsString, "disk_data");
 
-            # Storing the serial numbers and their machine/cpu values in associative arrays
+            # Removing the unit from the RAM value string
+            $memNumber = str_replace("kB", "", $mem);
+            # Classifying the RAM value into different capacity levels, ranging from 1GB to 64GB and above
+            if ($memNumber > 64 * 1024 * 1024)
+                $ramSize = "> 64";
+            else {
+                for ($i = 63; $i >= 0; $i--) {
+                    if ($memNumber > $i * 1024 * 1024) {
+                        $ramSize = $i + 1;
+                        break;
+                    }
+                }
+            }
+            # Classifying the disk data value into different capacity levels, ranging from 1GB to 1TB and above
+            if ($diskData > 1024 * 1024 * 1024)
+                $diskDataSize = "> 1 TB";
+            else {
+                for ($i = 9; $i >= 0; $i--) {
+                    if ($diskData > pow(2, $i) * 1024 * 1024) {
+                        $diskDataSize = pow(2, $i) . "-" . pow(2, $i + 1);
+                        break;
+                    }
+                }
+            }
+            # Storing the serial numbers and their hardware values in associative arrays
             $arrMachine[$serialNumber] = $machine;
             $arrCpu[$serialNumber] = $cpu;
+            $arrDiskRoot[$serialNumber] = $diskRoot;
+            $arrMem[$serialNumber] = $ramSize;
+            $arrDiskData[$serialNumber] = $diskDataSize;
         }
     }
 }
 fclose($logFile);
 
-# Opening two textfiles to store the values of machine and cpu separately
+# Opening different textfiles to store the hardware values separately
 $fileMachine = fopen("../data/result_utm_hardware_machine.txt", "w");
 $fileCpu = fopen("../data/result_utm_hardware_cpu.txt", "w");
+$fileMem = fopen("../data/result_utm_hardware_mem.txt", "w");
+$fileDiskRoot = fopen("../data/result_utm_hardware_diskRoot.txt", "w");
+$fileDiskData = fopen("../data/result_utm_hardware_diskData.txt", "w");
 
-# Counting the identicaly values for machine respectively cpu 
+# Counting identical hardware values 
 $arrCountMachine = array_count_values($arrMachine);
 $arrCountCpu = array_count_values($arrCpu);
+$arrCountMem = array_count_values($arrMem);
+$arrCountDiskRoot = array_count_values($arrDiskRoot);
+$arrCountDiskData = array_count_values($arrDiskData);
 
-/* sorting (descending) the arrays according to the values, in 
-this case the value (string) of machine respectively cpu */
+# Sorting (descending) the arrays according to the values (hardware values)
 arsort($arrCountMachine);
 arsort($arrCountCpu);
+arsort($arrCountDiskData);
 
-#  Writing the results für serial number and machine value into the textfile
+# Sorting (descending) the arrays according to the keys (capacity level)
+ksort($arrCountMem);
+ksort($arrCountDiskRoot);
+
+
+#  Writing the results for serial number and machine value into the textfile
 foreach ($arrCountMachine as $machineKey => $licenceCount) {
     fwrite($fileMachine, "Architektur: $machineKey,  Anzahl Lizenzen: $licenceCount \n");
 }
 
-#  Writing the results für serial number and cpu value into the textfile
-foreach ($arrCountCpu as $machineKey => $licenceCount) {
-    fwrite($fileCpu, "Architektur: $machineKey,  Anzahl Lizenzen: $licenceCount \n");
+#  Writing the results for serial number and cpu value into the textfile
+foreach ($arrCountCpu as $cpukey => $licenceCount) {
+    fwrite($fileCpu, "CPU: $cpukey,  Anzahl Lizenzen: $licenceCount \n");
 }
 
-echo "result_utm_hardware.txt wurde erstellt in ../data/ \n";
-echo "result_utm_hardware.txt wurde erstellt in ../data/";
+#  Writing the results for serial number and menory value into the textfile
+foreach ($arrCountMem as $memKey => $licenceCount) {
+    fwrite($fileMem, "Arbeitsspeichergrösse: $memKey GB,  Anzahl Lizenzen: $licenceCount \n");
+}
+
+#  Writing the results for serial number and root data value into the textfile
+foreach ($arrCountDiskRoot as $diskRootKey => $licenceCount) {
+    fwrite($fileDiskRoot, "Speichergrösse Systemlaufwerk: $diskRootKey kB,  Anzahl Lizenzen: $licenceCount \n");
+}
+
+#  Writing the results for serial number and disk data value into the textfile
+foreach ($arrCountDiskData as $diskDataKey => $licenceCount) {
+    fwrite($fileDiskData, "Speichergrösse Datenlaufwerk: $diskDataKey GB,  Anzahl Lizenzen: $licenceCount \n");
+}
+
+echo "result_utm_hardware_machine.txt wurde erstellt in ../data/\n";
+echo "result_utm_hardware_cpu.txt wurde erstellt in ../data/\n";
+echo "result_utm_hardware_mem.txt wurde erstellt in ../data/\n";
+echo "result_utm_hardware_diskRoot.txt wurde erstellt in ../data/\n";
+echo "result_utm_hardware_diskData.txt wurde erstellt in ../data/";
 
 fclose($fileMachine);
 fclose($fileCpu);
+fclose($fileMem);
+fclose($fileDiskRoot);
+fclose($fileDiskData);
