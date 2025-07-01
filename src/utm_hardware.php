@@ -1,9 +1,10 @@
 <?php
 
-/** Task #3: This PHP script scans the access log of a nginx server
- *  and identifies the machine (computer architecture) and cpu types
- *  of the clients. An overview with the numbers of the licence serial 
- *  numbers active on these categories will be provided.
+/**
+ * Task #3: This PHP script scans the access log of a nginx server
+ * and identifies the machine (computer architecture) and cpu types
+ * of the clients. An overview with the numbers of the licence serial 
+ * numbers active on these categories will be provided.
  */
 
 include 'includes/extract.inc.php';
@@ -32,49 +33,48 @@ while (!feof($logFile)) {
     # The script will only proceed, when a serial number was found
     if (isset($serialNumber)) {
 
-        # Function call of stringExtract() included in extract.inc.php to obtain the specs value
+        # Function call of stringExtract() included in extract.inc.php to obtain the specs string
         $specsString = stringExtract($line, "specs=");
 
         # The script will only proceed, when a specs string was found
         if (isset($specsString)) {
 
-            # Function call of specsExtract() included in extract.inc.php to obtain the hardware values
-            $machine = specsExtract($specsString, "machine");
-            $cpu = specsExtract($specsString, "cpu");
-            $mem = specsExtract($specsString, "mem");
-            $diskRoot = specsExtract($specsString, "disk_root");
-            $diskData = specsExtract($specsString, "disk_data");
+            # Function call of specsExtract() included in extract.inc.php to obtain the array of the specs JSON object
+            $specsJson = specsExtract($specsString);
 
-            # Removing the unit from the RAM value string
-            $memNumber = str_replace("kB", "", $mem);
-            # Classifying the RAM value into different capacity levels, ranging from 1GB to 64GB and above
-            if ($memNumber > 64 * 1024 * 1024)
-                $ramSize = "> 64";
-            else {
-                for ($i = 63; $i >= 0; $i--) {
-                    if ($memNumber > $i * 1024 * 1024) {
-                        $ramSize = $i + 1;
-                        break;
+            # The script will only proceed, when the specs string was decoded
+            if (isset($specsJson)) {
+                # Removing the unit from the RAM value string
+                $memNumber = str_replace("kB", "", $specsJson["mem"]);
+                # Classifying the RAM value into different capacity levels, ranging from 1GB to 64GB and above
+                if ($memNumber > 64 * 1024 * 1024)
+                    $ramSize = "> 64";
+                else {
+                    for ($i = 63; $i >= 0; $i--) {
+                        if ($memNumber > $i * 1024 * 1024) {
+                            $ramSize = $i + 1;
+                            break;
+                        }
                     }
                 }
-            }
-            # Classifying the disk data value into different capacity levels, ranging from 1GB to 1TB and above
-            if ($diskData > 1024 * 1024 * 1024)
-                $diskDataSize = "> 1 TB";
-            else {
-                for ($i = 9; $i >= 0; $i--) {
-                    if ($diskData > pow(2, $i) * 1024 * 1024) {
-                        $diskDataSize = pow(2, $i) . "-" . pow(2, $i + 1);
-                        break;
+                # Classifying the disk data value into different capacity levels, ranging from 1GB to 1TB and above
+                if ($specsJson["disk_data"] > 1024 * 1024 * 1024)
+                    $diskDataSize = "> 1 TB";
+                else {
+                    for ($i = 9; $i >= 0; $i--) {
+                        if ($specsJson["disk_data"] > pow(2, $i) * 1024 * 1024) {
+                            $diskDataSize = pow(2, $i) . "-" . pow(2, $i + 1);
+                            break;
+                        }
                     }
                 }
+                # Storing the serial numbers and their hardware values in associative arrays
+                $arrMachine[$serialNumber] = $specsJson["machine"];
+                $arrCpu[$serialNumber] = $specsJson["cpu"];
+                $arrDiskRoot[$serialNumber] = $specsJson["disk_root"];
+                $arrMem[$serialNumber] = $ramSize;
+                $arrDiskData[$serialNumber] = $diskDataSize;
             }
-            # Storing the serial numbers and their hardware values in associative arrays
-            $arrMachine[$serialNumber] = $machine;
-            $arrCpu[$serialNumber] = $cpu;
-            $arrDiskRoot[$serialNumber] = $diskRoot;
-            $arrMem[$serialNumber] = $ramSize;
-            $arrDiskData[$serialNumber] = $diskDataSize;
         }
     }
 }
@@ -102,7 +102,6 @@ arsort($arrCountDiskData);
 # Sorting (descending) the arrays according to the keys (capacity level)
 ksort($arrCountMem);
 ksort($arrCountDiskRoot);
-
 
 #  Writing the results for serial number and machine value into the textfile
 foreach ($arrCountMachine as $machineKey => $licenceCount) {

@@ -1,8 +1,9 @@
 <?php
 
-/** Task #1: This PHP script scans the access log of an nginx server
- *  for the licence serial numbers of those 10 UTMs, which are 
- *  accessing the server most often. 
+/** 
+ * Task #1: This PHP script scans the access log of an nginx server
+ * for the licence serial numbers of those 10 UTMs, which are 
+ * accessing the server most often. 
  */
 
 include 'includes/extract.inc.php';
@@ -60,6 +61,5 @@ $file = fopen("../data/result_utm_licences.txt", "w");
 foreach ($arrayTop10 as $serNr => $accessNr) {
   fwrite($file, "Seriennummer: $serNr, Zugriffe: $accessNr \n");
 }
-
-echo "result_utm_licences.txt wurde erstellt in ../txt/";
+echo "result_utm_licences.txt wurde erstellt in ../data/";
 fclose($file);

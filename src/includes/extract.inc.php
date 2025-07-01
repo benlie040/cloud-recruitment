@@ -1,10 +1,17 @@
 <?php
 
+/**
+ * The function extracts the value of the wanted field from the line.
+ * @param string $line
+ * @param string $fieldName
+ * @return string|null
+ */
 function stringExtract(string $line, string $fieldName): string|null
 {
+    # If the line contains no fieldName, null will be returned as default value
     $value = null;
 
-    # creating an array of each string of the current line, with whitespace as the delimiter
+    # Creating an array of each string of the current line, with whitespace as the delimiter
     $fields = explode(" ", string: $line);
 
     foreach ($fields as $field) {
@@ -15,10 +22,16 @@ function stringExtract(string $line, string $fieldName): string|null
     return $value;
 }
 
-function specsExtract(string $specsString, string $fieldName): string|false
+/**
+ * The function decodes the gzip and base64 encoded JSON string 
+ * of the specs field and converts it to an array.
+ * @param string $specsString
+ * @return array|null
+ */
+function specsExtract(string $specsString): array|null
 {
-    # If any of the decoding steps fails, false will be returned as default value
-    $result = false;
+    # If any of the decoding steps fails, null will be returned as default value
+    $result = null;
     # Decoding of the String from Base64 format
     $decodedData = base64_decode($specsString);
     if ($decodedData) {
@@ -29,7 +42,7 @@ function specsExtract(string $specsString, string $fieldName): string|false
             $metadataArray = json_decode($unzippedData, true);
             if ($metadataArray)
                 # Accessing the desired value from the associative array
-                $result = $metadataArray[$fieldName];
+                $result = $metadataArray;
         }
     }
     return $result;
