@@ -47,6 +47,7 @@ function specsExtract(string $specsString): array
                 # Accessing the desired value from the associative array
                 $result["JSON"] = $metadataArray;
             else {
+                # Error message for invalid JSON
                 $errCode = json_last_error();
                 $errMessage = match ($errCode) {
                     0 => 'JSON_ERROR_NONE',
@@ -62,12 +63,10 @@ function specsExtract(string $specsString): array
                     10 => 'JSON_ERROR_UTF16',
                 };
                 $result["Error"] = $errMessage;
-                #$result["invalidValue"] = $unzippedData;
             }
 
         } else {
             $result["Error"] = "gzip data error";
-            #$result["invalidValue"] = $unzippedData;
         }
     } else {
         $result["Error"] = "base64 data error";

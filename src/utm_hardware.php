@@ -39,6 +39,7 @@ while (!feof($logFile)) {
     # Function call of stringExtract() included in extract.inc.php to obtain the serial number value
     $serialNumber = stringExtract($line, "serial=");
 
+
     # The script will only proceed, when a serial number was found
     if (isset($serialNumber)) {
 
@@ -55,36 +56,52 @@ while (!feof($logFile)) {
 
             # The script will only proceed, when the specs string was decoded
             if (!isset($specsJson["Error"])) {
-                # Removing the unit from the RAM value string
-                $memNumber = str_replace("kB", "", $specsJson["JSON"]["mem"]);
-                # Classifying the RAM value into different capacity levels, ranging from 1GB to 64GB and above
-                if ($memNumber > 64 * 1024 * 1024)
-                    $ramSize = "> 64";
-                else {
-                    for ($i = 63; $i >= 0; $i--) {
-                        if ($memNumber > $i * 1024 * 1024) {
-                            $ramSize = $i + 1;
-                            break;
+
+                # Accessing the value for the mac address
+                $macNumber = $specsJson["JSON"]["mac"];
+
+                # The script will only proceed, when the mac address is valid
+                if (filter_var($macNumber, FILTER_VALIDATE_MAC)) {
+
+                    /* There are licence serial numbers active on more than one device violating the licence agrement.
+                    To include the hardware used of these UTMs, despite the violation, the combination of serial number 
+                    and mac address can identity this clients aswell*/
+                    $serialNumber = $serialNumber . $macNumber;
+
+                    # Removing the unit from the RAM value string
+                    $memNumber = str_replace("kB", "", $specsJson["JSON"]["mem"]);
+                    # Classifying the RAM value into different capacity levels, ranging from 1GB to 64GB and above
+                    if ($memNumber > 64 * 1024 * 1024)
+                        $ramSize = "> 64";
+                    else {
+                        for ($i = 63; $i >= 0; $i--) {
+                            if ($memNumber > $i * 1024 * 1024) {
+                                $ramSize = $i + 1;
+                                break;
+                            }
                         }
                     }
-                }
-                # Classifying the disk data value into different capacity levels, ranging from 1GB to 1TB and above
-                if ($specsJson["JSON"]["disk_data"] > 1024 * 1024 * 1024)
-                    $diskDataSize = "> 1 TB";
-                else {
-                    for ($i = 9; $i >= 0; $i--) {
-                        if ($specsJson["JSON"]["disk_data"] > pow(2, $i) * 1024 * 1024) {
-                            $diskDataSize = pow(2, $i) . "-" . pow(2, $i + 1);
-                            break;
+                    # Classifying the disk data value into different capacity levels, ranging from 1GB to 1TB and above
+                    if ($specsJson["JSON"]["disk_data"] > 1024 * 1024 * 1024)
+                        $diskDataSize = "> 1 TB";
+                    else {
+                        for ($i = 9; $i >= 0; $i--) {
+                            if ($specsJson["JSON"]["disk_data"] > pow(2, $i) * 1024 * 1024) {
+                                $diskDataSize = pow(2, $i) . "-" . pow(2, $i + 1);
+                                break;
+                            }
                         }
                     }
+                    # Storing the serial numbers and their hardware values in associative arrays
+                    $arrMachine[$serialNumber] = $specsJson["JSON"]["machine"];
+                    $arrCpu[$serialNumber] = $specsJson["JSON"]["cpu"];
+                    $arrDiskRoot[$serialNumber] = $specsJson["JSON"]["disk_root"];
+                    $arrMem[$serialNumber] = $ramSize;
+                    $arrDiskData[$serialNumber] = $diskDataSize;
+                } else {
+                    # In case of an invalid mac address, the line and the message will be saved.
+                    $arrError[$lineCount] = "no valid mac address";
                 }
-                # Storing the serial numbers and their hardware values in associative arrays
-                $arrMachine[$serialNumber] = $specsJson["JSON"]["machine"];
-                $arrCpu[$serialNumber] = $specsJson["JSON"]["cpu"];
-                $arrDiskRoot[$serialNumber] = $specsJson["JSON"]["disk_root"];
-                $arrMem[$serialNumber] = $ramSize;
-                $arrDiskData[$serialNumber] = $diskDataSize;
             } else {
                 # In case of invalid base64, gzip, JSON specsExtract will return the error message.
                 $arrError[$lineCount] = $specsJson["Error"];
@@ -93,6 +110,7 @@ while (!feof($logFile)) {
             # In case no specs string was found, the line and the message will be saved.
             $arrError[$lineCount] = "missing specs field";
         }
+
     } else {
         # In case no serial number was found, the line and the message will be saved.
         $arrError[$lineCount] = "missing serial number field";

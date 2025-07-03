@@ -80,6 +80,9 @@ while (!feof($logFile)) {
                         the associated mac number as the value.*/
                         $utmArray[$serialNumber] = array($macNumber);
                     }
+                } else {
+                    # In case of an invalid mac address, the line and the message will be saved.
+                    $arrError[$lineCount] = "no valid mac address";
                 }
             } else {
                 # In case of invalid base64, gzip, JSON specsExtract will return the error message.
