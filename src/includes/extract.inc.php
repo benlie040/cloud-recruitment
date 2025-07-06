@@ -36,7 +36,7 @@ function specsExtract(string $specsString): array
     # If any of the decoding steps fails, null will be returned as default value
     $result = null;
     # Decoding of the String from Base64 format
-    $decodedData = base64_decode($specsString);
+    $decodedData = base64_decode($specsString, true);
     if ($decodedData) {
         # Uncompressing the Base64 decoded data, suppressing warnings if decodedData is corrupted
         $unzippedData = @gzdecode($decodedData);
