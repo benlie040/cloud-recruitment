@@ -44,7 +44,7 @@ function specsExtract(string $specsString): array
             # Conversion of the uncompressed JSON string into an associative array
             $metadataArray = json_decode($unzippedData, true);
             if ($metadataArray)
-                # Accessing the desired value from the associative array
+                # JSON array as return value
                 $result["JSON"] = $metadataArray;
             else {
                 # Error message for invalid JSON
