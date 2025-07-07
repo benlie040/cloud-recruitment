@@ -1,16 +1,20 @@
 <?php
 
-/** Task #1: This PHP script scans the access log of an nginx server
- *  for the licence serial numbers of those 10 UTMs, which are 
- *  accessing the server most often. 
+/** 
+ * Task #1: This PHP script scans the access log of an nginx server
+ * for the licence serial numbers of those 10 UTMs, which are 
+ * accessing the server most often. 
  */
 
 include 'includes/extract.inc.php';
 
+$filePath = '../log/updatev12-access-pseudonymized.log'; //path of the logfile
+$licenceFilePath = "../data/result_utm_licences.txt"; //Path of the result file
+$errorFilePath = "../data/error_licence.log"; //Log of the errors for evaluation purposes
+$lineCount = 1; //Counter for the lines
+
 # exception handling, to prevent a fatal error, when reading the file
 try {
-  $filePath = '../log/updatev12-access-pseudonymized.log'; //path of the logfile
-
   # opening the logfile in ready only mode
   $logFile = fopen($filePath, "r");
 
@@ -23,6 +27,8 @@ try {
 }
 # array for storing the key/value pairs of serial number & number of accesses
 $arraySN = [];
+# The array will contain in case of errors the line as key and error message as value
+$arrError = [];
 
 while (!feof($logFile)) {
   $line = fgets($logFile);
@@ -44,6 +50,11 @@ while (!feof($logFile)) {
       $arraySN[$serialNumber] += 1
       :
       $arraySN[$serialNumber] = 1; //new serial number will be added with the first access
+  else {
+    # In case no serial number was found, the line and the message will be saved.
+    $arrError[$lineCount] = "missing serial number field";
+  }
+  $lineCount++;
 }
 
 fclose($logFile);
@@ -60,6 +71,14 @@ $file = fopen("../data/result_utm_licences.txt", "w");
 foreach ($arrayTop10 as $serNr => $accessNr) {
   fwrite($file, "Seriennummer: $serNr, Zugriffe: $accessNr \n");
 }
-
-echo "result_utm_licences.txt wurde erstellt in ../txt/";
 fclose($file);
+
+// Writing the errors into a text file
+$errorLog = fopen($errorFilePath, "w");
+foreach ($arrError as $line => $err) {
+  fwrite($errorLog, "Zeile: $line, Fehler: $err\n");
+}
+fclose($errorLog);
+
+echo "Das Ergebnis wurde gespeichert in: $licenceFilePath\n";
+

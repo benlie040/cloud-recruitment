@@ -17,12 +17,14 @@ a few statistics and determine issues related to the UTM licences of the client 
 - go into the src folder with `cd src`
 - run the script with the command `php utm_licences.php`
 - the result will be stored in `data/result_utm_licences.php.txt`
+- an error report will be stored in `data/error_licence.log`
 
 **Task #2**
 
 - go into the src folder with `cd src`
 - run the script with the command `php utm_licence_violation.php`
 - the result will be stored in `data/result_utm_licence_violation.txt`
+- an error report will be stored in `data/error_violation.log`
 
 **Task #3**
 
@@ -30,3 +32,7 @@ a few statistics and determine issues related to the UTM licences of the client 
 - run the script with the command `php utm_hardware.php`
 - the result for category machine will be stored in `data/result_utm_hardware_machine.txt`
 - the result for category cpu will be stored in `data/result_utm_hardware_cpu.txt`
+- the result for category memory will be stored in `data/result_utm_hardware_mem.txt`
+- the result for category root partition will be stored in `data/result_utm_hardware_disk_root.txt`
+- the result for category data partition will be stored in `data/result_utm_hardware_disk_data.txt`
+- an error report will be stored in `data/error_hardware.log`
