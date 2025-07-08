@@ -6,7 +6,7 @@
  * accessing the server most often. 
  */
 
-include 'includes/extract.inc.php';
+include 'UTM.php';
 
 $filePath = '../log/updatev12-access-pseudonymized.log'; //path of the logfile
 $licenceFilePath = "../data/result_utm_licences.txt"; //Path of the result file
@@ -39,8 +39,9 @@ while (!feof($logFile)) {
   # unset variable for the serial number at the start of each loop
   $serialNumber = null;
 
-  # function call of stringExtract() included in extract.inc.php
-  $serialNumber = stringExtract($line, "serial=");
+  # Initializing an object of the class UTM to access the serial number property
+  $utm = new UTM_1($line);
+  $serialNumber = $utm->getSerialNumber();
 
   # if serialNumber is set, a serial number was found
   if (isset($serialNumber))

@@ -7,7 +7,7 @@
  * this rule the most. 
  */
 
-include 'includes/extract.inc.php';
+include 'UTM.php';
 
 $logFilePath = '../log/updatev12-access-pseudonymized.log'; //Path of the logfile
 $violationFilePath = "../data/result_utm_licence_violation.txt"; //Path of the result file
@@ -35,63 +35,42 @@ $arrError = [];
 while (!feof($logFile)) {
     $line = fgets($logFile);
 
-    # Function call of stringExtract() included in extract.inc.php to obtain the serial number value
-    $serialNumber = stringExtract($line, "serial=");
+    # Initializing an object of the class UTM to access the serial number property
+    $utm = new UTM_2($line);
+    $serialNumber = $utm->getSerialNumber();
+    $macAddress = $utm->getMacAddress();
+    $error = $utm->getError();
 
     # The script will only proceed, when a serial number was found
     if (isset($serialNumber)) {
 
-        /* Function call of stringExtract() included in extract.inc.php to obtain the specs value
-        In some lines the fieldname is sepcs instead of specs. Since this is a systematical error 
-        the sepcs value will be evaluated too as a temporary solution. */
-        $specsString = stringExtract($line, "specs=") ?? stringExtract($line, "sepcs=");
+        # The script will only proceed, when the specs string was decoded
+        if (!isset($error)) {
 
-        # The script will only proceed, when a specs string was found.
-        if (isset($specsString)) {
+            # Check if utmArray contains the serial number as a key
+            if (array_key_exists($serialNumber, $utmArray)) {
 
-            # Function call of specsExtract() included in extract.inc.php to obtain the array of the specs JSON object
-            $specsJson = specsExtract($specsString);
+                /* If the utmArray contains the serial number already as a key, 
+                 another ckeck follows, if the associated mac number is not already 
+                 an element of the associated array. */
+                if (!in_array($macAddress, $utmArray[$serialNumber]))
 
-            # The script will only proceed, when the specs string was decoded
-            if (!isset($specsJson["Error"])) {
+                    /* If the mac number is new, it will be added to the array (value).
+                    Since the serial number is not a new key and one more mac number 
+                    is pushed to a list of already recorded mac numbers, the number of 
+                    license violations can be tracked with help of the array (value). */
+                    array_push($utmArray[$serialNumber], $macAddress);
 
-                # Accessing the value for the mac address
-                $macNumber = $specsJson["JSON"]["mac"];
-
-                # The script will only proceed, when the mac address is valid
-                if (filter_var($macNumber, FILTER_VALIDATE_MAC)) {
-
-                    # Check if utmArray contains the serial number as a key
-                    if (array_key_exists($serialNumber, $utmArray)) {
-
-                        /* If the utmArray contains the serial number already as a key, 
-                         another ckeck follows, if the associated mac number is not already 
-                         an element of the associated array. */
-                        if (!in_array($macNumber, $utmArray[$serialNumber]))
-
-                            /* If the mac number is new, it will be added to the array (value).
-                            Since the serial number is not a new key and one more mac number 
-                            is pushed to a list of already recorded mac numbers, the number of 
-                            license violations can be tracked with help of the array (value). */
-                            array_push($utmArray[$serialNumber], $macNumber);
-
-                    } else {
-                        /* In this branch utmArray adds the serial number as a new key and the 
-                        the associated mac number as the value.*/
-                        $utmArray[$serialNumber] = array($macNumber);
-                    }
-                } else {
-                    # In case of an invalid mac address, the line and the message will be saved.
-                    $arrError[$lineCount] = "no valid mac address";
-                }
             } else {
-                # In case of invalid base64, gzip, JSON specsExtract will return the error message.
-                $arrError[$lineCount] = $specsJson["Error"];
+                /* In this branch utmArray adds the serial number as a new key and the 
+                the associated mac number as the value.*/
+                $utmArray[$serialNumber] = array($macAddress);
             }
         } else {
-            # In case no specs string was found, the line and the message will be saved.
-            $arrError[$lineCount] = "missing specs field";
+            # In case of invalid base64, gzip, JSON, MAC address or a missing specs field an error will be raised
+            $arrError[$lineCount] = $error;
         }
+
     } else {
         # In case no serial number was found, the line and the message will be saved.
         $arrError[$lineCount] = "missing serial number field";
